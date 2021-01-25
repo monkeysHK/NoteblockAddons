@@ -2,8 +2,8 @@
 This note block mod aids note block editing, but not modifying any ranges and instrument of the note blocks. Worlds should be able to loaded from and opened in vanilla without problems.  
   
 ## Download
-Download link is [here](https://www.curseforge.com/minecraft/mc-mods/noteblock-addons)  
-I highly recommend using this mod with the texturepack [3D NoteBlock Display](https://www.creatorlabs.net/downloads/3d-noteblock-displays/) by [CreatorLabs](https://www.creatorlabs.net/)  
+Download link is here: https://www.curseforge.com/minecraft/mc-mods/noteblock-addons  
+I highly recommend using this mod with the texturepack [3D NoteBlock Display](https://www.creatorlabs.net/downloads/3d-noteblock-displays/) by [CreatorLabs](https://www.creatorlabs.net/).  
 This texturepack shows the instrument and note on the Note Block, which can be quite useful when you edit note block.  
 
 ## Usage
@@ -22,4 +22,4 @@ This texturepack shows the instrument and note on the Note Block, which can be q
 - Loading vanilla world does not load tile entity (and NBT values) for note blocks correctly without any player interaction - player still need to change the note at least once to "put" the tile entity in place  
 
 ## Credits
-Much thanks to [CreatorLabs] (https://www.creatorlabs.net/) for actually allowing me to include some of their awesome textures from their 3D Noteblock Displays in the mod.
+Much thanks to [CreatorLabs](https://www.creatorlabs.net/) for actually allowing me to include some of their awesome textures from their 3D Noteblock Displays in the mod.
