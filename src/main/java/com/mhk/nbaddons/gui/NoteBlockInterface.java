@@ -238,8 +238,8 @@ public class NoteBlockInterface extends Screen {
             }
             else {
                 int delta = NoteBlockConfig.getTargetRange()*12;
-                if (modifiers == 1) delta += 1; // left shift: sharp
-                else if (modifiers == 2) delta -= 1; // left ctrl: flat
+                if (modifiers == GLFW.GLFW_MOD_CONTROL) delta += 1; // control: sharp
+                else if (modifiers == GLFW.GLFW_MOD_SHIFT) delta -= 1; // shift: flat
                 switch (keyCode) {
                     // a-g: set to lowest of corresponding note
                     case GLFW.GLFW_KEY_G: switchNote(1+delta); break;

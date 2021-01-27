@@ -1,9 +1,10 @@
 {
   "homepage": "https://www.curseforge.com/minecraft/mc-mods/noteblock-addons/",
   "1.16.4": {
+    "1.1": "Major fixes to keybinds.",
     "1.0": "Initial mod release."
   },
   "promos": {
-    "1.16.4-recommended": "1.0"
+    "1.16.4-recommended": "1.1"
   }
 }

@@ -1,7 +1,6 @@
 package com.mhk.nbaddons.gui;
 
 import com.mhk.nbaddons.config.NoteBlockConfig;
-import com.mhk.nbaddons.events.ModClientEvents;
 import com.mhk.nbaddons.nbaddons;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;

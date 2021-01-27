@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/monkeysHK/NoteblockAddons/issues"
 
 [[mods]]
     modId="nbaddons"
-    version="1.0"
+    version="1.1"
     displayName="NoteBlock Addons"
     updateJSONURL="https://raw.githubusercontent.com/monkeysHK/NoteblockAddons/update.json"
     displayURL="https://www.curseforge.com/minecraft/mc-mods/noteblock-addons/"
@@ -13,6 +13,7 @@ issueTrackerURL="https://github.com/monkeysHK/NoteblockAddons/issues"
     authors="mhk"
     description='''
     Minecraft 1.16+ Note Block Editting Mod. Makes note block editting simpler and more elegant.
+    Credit to CreatorLabs who permitted the use of their designs in this mod.
     '''
 
 [[dependencies.nbaddons]]

@@ -1,6 +1,5 @@
 package com.mhk.nbaddons.config;
 
-import com.mhk.nbaddons.events.ModClientEvents;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class NoteBlockConfig {
