@@ -25,7 +25,7 @@ This texturepack shows the instrument and note on the Note Block, which can be q
 ## Installation
 - This mod is a forge mod; forge for 1.16.x must be installed first
 - Go to the download link in the **[download](#download)** section and download the .jar file
-- Put the mod file into the mod folder (usually in \AppData\Roaming\.minecraft)
+- Put the mod file into the mod folder (usually in \\AppData\\Roaming\\.minecraft)
 
 ## Credits
 Much thanks to [CreatorLabs](https://www.creatorlabs.net/) for actually allowing me to include some of their awesome textures from their 3D Noteblock Displays in the mod.
