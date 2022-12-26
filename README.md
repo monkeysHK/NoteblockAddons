@@ -20,6 +20,8 @@ This texturepack shows the instrument and note on the Note Block, which can be q
 
 ## Known issues
 - Loading vanilla world does not load tile entity (and NBT values) for note blocks correctly without any player interaction - player still need to change the note at least once to "put" the tile entity in place  
+  - What it affects: Picking up with NBT values (Ctrl + Middle Click) will not work  
+  - What it should not affect: Anything else  
 - [Open Issue #1] Game may freeze immediately upon interacting with a note block: the fix is not found  
 
 ## Installation
