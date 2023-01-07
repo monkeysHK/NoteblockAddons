@@ -32,7 +32,7 @@ public enum InstrumentGroup {
                 octave = this.ordinal() + 3;
             }
             coloredkeys[i] = getColor(octave) + keys[i] + (this.ordinal() == 5? "": octave);
-            keys[i] = TextFormatting.WHITE.toString() + keys[i] + (this.ordinal() == 5? "": octave);
+            keys[i] = TextFormatting.WHITE + keys[i] + (this.ordinal() == 5? "": octave);
         }
         this.range = range;
     }

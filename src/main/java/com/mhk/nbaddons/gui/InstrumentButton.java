@@ -17,7 +17,6 @@ public class InstrumentButton extends Button {
     private final ResourceLocation rl;
 
     public InstrumentButton(Minecraft mc, ResourceLocation rl, float scale, float x, float y, float w, float h, ITextComponent itc, Button.IPressable pressedAction) {
-
         super(Math.round(x), Math.round(y), Math.round(w*scale), Math.round(h*scale), itc, pressedAction);
         this.scale = scale;
         this.mc = mc;
@@ -33,14 +32,14 @@ public class InstrumentButton extends Button {
     @Override
     public void render(@NotNull MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (visible) {
-            mc.getTextureManager().bindTexture(rl);
-            matrixStack.push();
+            mc.getTextureManager().bind(rl);
+            matrixStack.pushPose();
             {
                 matrixStack.translate(x, y, 0);
                 matrixStack.scale(scale, scale, scale);
                 this.blit(matrixStack, 0, 0, 0, 0, true_width, true_height);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 }

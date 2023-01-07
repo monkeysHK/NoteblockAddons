@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class PianoKeyButton extends Button {
 
-    private int u = 0, v = 0, color;
+    private int color;
     private int true_width, true_height; //this.width is the scaled width //this.height is the scaled height
     private float scale;
     private final Minecraft mc;
@@ -29,19 +29,20 @@ public class PianoKeyButton extends Button {
     }
 
     @Override
-    public void playDownSound(SoundHandler handler) {
+    public void playDownSound(@NotNull SoundHandler handler) {
+        /* Do nothing (suppressed) */
     }
 
     @Override
     public void render(@NotNull MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (visible) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(x, y, 0);
                 matrixStack.scale(scale, scale, scale);
                 fill(matrixStack, 0, 0, true_width, true_height, color);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 }

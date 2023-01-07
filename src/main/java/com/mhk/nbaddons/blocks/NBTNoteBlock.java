@@ -6,7 +6,6 @@ import com.mhk.nbaddons.setup.Registration;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.NoteBlock;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
@@ -22,40 +21,39 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.RegistryObject;
+import org.jetbrains.annotations.NotNull;
 
 import static com.mhk.nbaddons.util.NoteBlockUtil.handleChange;
 import static com.mhk.nbaddons.util.NoteBlockUtil.tuneNoteBlock;
 
 public class NBTNoteBlock extends NoteBlock {
 
-    //public static Block NOTEBLOCK;
     public static final RegistryObject<Block> NOTEBLOCK = Registration.NOTEBLOCK;
 
     public NBTNoteBlock(Properties properties) {
         super(properties);
     }
+    NoteBlockInterface gui;
 
     @Override
-    public BlockState getStateForPlacement(BlockItemUseContext context) {
+    public BlockState getStateForPlacement(@NotNull BlockItemUseContext context) {
         BlockState bs = super.getStateForPlacement(context);
-        ItemStack stack = context.getItem();
-        CompoundNBT cmp = stack.getChildTag("BlockEntityTag");
-        if (!context.getWorld().isRemote() && (cmp != null) && (bs != null)) {
-            return bs.with(NOTE, cmp.getInt("note")).with(
+        ItemStack stack = context.getItemInHand();
+        CompoundNBT cmp = stack.getTagElement("BlockEntityTag");
+        if (!context.getLevel().isClientSide() && (cmp != null) && (bs != null)) {
+            return bs.setValue(NOTE, cmp.getInt("note")).setValue(
                     INSTRUMENT, NoteBlockInstrument.values()[cmp.getInt("instrument")]);
         }
         return bs;
     }
 
-
-
     @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-        CompoundNBT cmp = stack.getChildTag("BlockEntityTag");
-        if (!worldIn.isRemote() && (cmp != null)) {
-            NoteBlockInstrument current = NoteBlockInstrument.byState(worldIn.getBlockState(pos.down()));
-            NoteBlockInstrument result = NoteBlockInstrument.values()[cmp. getInt("instrument")];
+    public void setPlacedBy(@NotNull World worldIn, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
+        super.setPlacedBy(worldIn, pos, state, placer, stack);
+        CompoundNBT cmp = stack.getTagElement("BlockEntityTag");
+        if (!worldIn.isClientSide() && (cmp != null)) {
+            NoteBlockInstrument current = NoteBlockInstrument.byState(worldIn.getBlockState(pos.below()));
+            NoteBlockInstrument result = NoteBlockInstrument.values()[cmp.getInt("instrument")];
             if (!current.equals(result)) {
                 tuneNoteBlock(worldIn, pos, (PlayerEntity) placer, NoteBlockOrder.byInstrument(result));
             }
@@ -63,13 +61,18 @@ public class NBTNoteBlock extends NoteBlock {
     }
 
     @Override
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (worldIn.isRemote) {
+    @NotNull
+    public ActionResultType use(@NotNull BlockState state, World worldIn, @NotNull BlockPos pos, @NotNull PlayerEntity player, @NotNull Hand handIn, @NotNull BlockRayTraceResult hit) {
+        // Note: each time this is invoked, there are two calls: first one from client side, second one from non-client side.
+        // We need to open the GUI on the client world, then supply the non-client world to it so that it can update the world.
+        if (!worldIn.isClientSide()) {
+            if (this.gui != null) {
+                this.gui.attachNonClientWorld(worldIn);
+            }
             return ActionResultType.SUCCESS;
-        } else {
-            Minecraft.getInstance().displayGuiScreen(new NoteBlockInterface(pos, worldIn, player));
-            return ActionResultType.CONSUME;
         }
+        this.gui = NoteBlockInterface.openGUI(pos, player);
+        return ActionResultType.CONSUME;
     }
 
     @Override
@@ -84,7 +87,7 @@ public class NBTNoteBlock extends NoteBlock {
 
     @Override
     public ItemStack getPickBlock(BlockState state, RayTraceResult target, IBlockReader world, BlockPos pos, PlayerEntity player) {
-        handleChange((World) world, pos, NOTEBLOCK.get().getDefaultState(), state);
+        handleChange((World) world, pos, NOTEBLOCK.get().defaultBlockState(), state);
         return super.getPickBlock(state, target, world, pos, player);
     }
 }

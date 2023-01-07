@@ -35,8 +35,8 @@ public class SwitchButton extends Button {
     @Override
     public void render(@NotNull MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (visible) {
-            mc.getTextureManager().bindTexture(rl);
-            matrixStack.push();
+            mc.getTextureManager().bind(rl);
+            matrixStack.pushPose();
             {
                 matrixStack.translate(x, y, 0);
                 matrixStack.scale(scale, scale * (144/168f), scale);
@@ -45,7 +45,7 @@ public class SwitchButton extends Button {
                 else
                     this.blit(matrixStack, 0, 0, 0, 0, SWITCH_W, SWITCH_H);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 

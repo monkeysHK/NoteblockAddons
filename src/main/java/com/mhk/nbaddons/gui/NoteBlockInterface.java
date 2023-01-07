@@ -5,6 +5,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.RenderState;
@@ -28,7 +29,6 @@ import static net.minecraft.block.NoteBlock.NOTE;
 public class NoteBlockInterface extends Screen {
 
     // General
-    private final World THISWORLD;
     private BlockPos nbPos;
     private BlockState blockState, blockStateUnder;
     private final List<List<Button>> buttonRenderOrder = new ArrayList<>();
@@ -65,11 +65,11 @@ public class NoteBlockInterface extends Screen {
         RenderSystem.defaultBlendFunc();
     });
     private final ResourceLocation BUTTON_LOC = new ResourceLocation("minecraft", "textures/gui/widgets.png");
+    World nonClientWorld;
 
-    public NoteBlockInterface(BlockPos blockPos, World world, PlayerEntity player) {
+    public NoteBlockInterface(BlockPos blockPos, PlayerEntity player) {
         super(new StringTextComponent("Note Block Interface"));
         nbPos = blockPos;
-        THISWORLD = world;
         this.player = player;
     }
 
@@ -117,7 +117,6 @@ public class NoteBlockInterface extends Screen {
         {
             float x_referencept;
             float y_startingpt = this.height / 2f;
-            int i = 0;
             for (int key : BLACKKEYS) {
                 x_referencept = key_pos[key+1][0];
                 key_pos[key][0] = x_referencept - ((BLACKKEY_W + SMALLGAPSIZE) * scale / 2f);
@@ -137,17 +136,17 @@ public class NoteBlockInterface extends Screen {
                 buttonRenderOrder.get(2).add(addButton(new PianoKeyButton(minecraft, 0xFFFFFFFF, scale, key_pos[key][0], key_pos[key][1], WHITEKEY_W, WHITEKEY_H, EMPTY_STC, button -> switchNote(key))));
             }
             // All other buttons
-            buttonRenderOrder.get(3).add(addButton(new Button(width/2 - 100, (int) Math.round(height/2f + (WHITEKEY_H + 1.5*LARGEGAPSIZE)*scale), 200, 20, new StringTextComponent("Done"), button -> closeScreen())));
+            buttonRenderOrder.get(3).add(addButton(new Button(width/2 - 100, (int) Math.round(height/2f + (WHITEKEY_H + 1.5*LARGEGAPSIZE)*scale), 200, 20, new StringTextComponent("Done"), button -> NoteBlockInterface.closeGUI())));
         }
         // initialize variables
-        if (this.minecraft != null && this.minecraft.world != null) {
-            blockState = this.minecraft.world.getBlockState(nbPos);
-            blockStateUnder = this.minecraft.world.getBlockState(nbPos.down());
-            lastNbo = currentNbo = byState(blockStateUnder);
-            updateRenderKeys();
-            lastNote = blockState.get(NOTE);
-            putNote(lastNote);
+        if (this.getMinecraft().level != null) {
+            blockState = this.getMinecraft().level.getBlockState(nbPos);
+            blockStateUnder = this.getMinecraft().level.getBlockState(nbPos.below());
         }
+        lastNbo = currentNbo = byState(blockStateUnder);
+        updateRenderKeys();
+        lastNote = blockState.getValue(NOTE);
+        putNote(lastNote);
         super.init();
     }
 
@@ -162,8 +161,8 @@ public class NoteBlockInterface extends Screen {
         if (ignoreFlag) return;
         if (i > 24) return;
         putNote(i);
-        if (!updateBlock())
-            THISWORLD.addBlockEvent(nbPos, blockState.getBlock(), 0, 0); // play sound
+        if (!updateBlock() && this.getMinecraft().level != null)
+            this.getMinecraft().level.blockEvent(nbPos, blockState.getBlock(), 0, 0); // play sound
         noteChangeFlag = true;
     }
 
@@ -174,21 +173,21 @@ public class NoteBlockInterface extends Screen {
     }
 
     private boolean updateBlock() {
-        if (this.minecraft != null && this.minecraft.world != null && THISWORLD != null && !THISWORLD.isRemote()) {
+        World worldUsing = this.nonClientWorld != null ? this.nonClientWorld : this.getMinecraft().level;
 
-            if (lastNbo != currentNbo) {
-                lastNbo = currentNbo;
-                blockState = tuneNoteBlock(THISWORLD, nbPos, player, currentNbo);
-                updateRenderKeys();
-                return true;
-            }
-
-            if (lastNote != currentNote) {
-                lastNote = currentNote;
-                blockState = tuneNoteBlock(THISWORLD, nbPos, player, currentNote);
-                return true;
-            }
+        if (lastNbo != currentNbo && worldUsing != null && !worldUsing.isClientSide()) {
+            lastNbo = currentNbo;
+            blockState = tuneNoteBlock(worldUsing, nbPos, player, currentNbo);
+            updateRenderKeys();
+            return true;
         }
+
+        if (lastNote != currentNote && worldUsing != null && !worldUsing.isClientSide()) {
+            lastNote = currentNote;
+            blockState = tuneNoteBlock(worldUsing, nbPos, player, currentNote);
+            return true;
+        }
+
         return false;
     }
 
@@ -201,7 +200,7 @@ public class NoteBlockInterface extends Screen {
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         assert minecraft != null;
 
-        int old_ = blockState.get(NOTE);
+        int old_ = blockState.getValue(NOTE);
         int new_ = old_;
 
         if (!hasShiftDown()) {
@@ -212,8 +211,8 @@ public class NoteBlockInterface extends Screen {
             }
             else {
                 // raise/lower by note
-                if (delta > 0) new_ = transposeNote(blockState.get(NOTE), 1); // scrolling up
-                if (delta < 0) new_ = transposeNote(blockState.get(NOTE), -1); // scrolling down
+                if (delta > 0) new_ = transposeNote(blockState.getValue(NOTE), 1); // scrolling up
+                if (delta < 0) new_ = transposeNote(blockState.getValue(NOTE), -1); // scrolling down
             }
             switchNote(new_);
         }
@@ -223,7 +222,8 @@ public class NoteBlockInterface extends Screen {
 
     private void replayNote() {
         ignoreFlag = true;
-        THISWORLD.addBlockEvent(nbPos, blockState.getBlock(), 0, 0);
+        if (this.getMinecraft().level != null)
+            this.getMinecraft().level.blockEvent(nbPos, blockState.getBlock(), 0, 0);
     }
 
 
@@ -234,7 +234,7 @@ public class NoteBlockInterface extends Screen {
             // note change handler
             if (prevKey == keyCode && prevMod == modifiers && !noteChangeFlag) {
                 if (NoteBlockConfig.getRemapReplay()) replayNote();
-                else switchNote(octaveChange(blockState.get(NOTE), true));
+                else switchNote(octaveChange(blockState.getValue(NOTE), true));
             }
             else {
                 int delta = NoteBlockConfig.getTargetRange()*12;
@@ -259,7 +259,7 @@ public class NoteBlockInterface extends Screen {
                 // spacebar button replays note
                 case GLFW.GLFW_KEY_SPACE: replayNote(); break;
                 case GLFW.GLFW_KEY_R:
-                    if (NoteBlockConfig.getRemapReplay()) switchNote(octaveChange(blockState.get(NOTE), true));
+                    if (NoteBlockConfig.getRemapReplay()) switchNote(octaveChange(blockState.getValue(NOTE), true));
                     else replayNote(); break;
                 // for instrument switch
                 case GLFW.GLFW_KEY_RIGHT: NoteBlockConfig.setTargetRange(1); break; // right arrow
@@ -271,13 +271,13 @@ public class NoteBlockInterface extends Screen {
                     else switchNbo(currentNbo.getNext(1)); break; // with mod=none
                 // for note switch
                 case GLFW.GLFW_KEY_DOWN: // down arrow
-                    if (modifiers != 2) switchNote(transposeNote(blockState.get(NOTE), -1));
-                    else switchNote(octaveChange(blockState.get(NOTE), false)); break;
+                    if (modifiers != 2) switchNote(transposeNote(blockState.getValue(NOTE), -1));
+                    else switchNote(octaveChange(blockState.getValue(NOTE), false)); break;
                 case GLFW.GLFW_KEY_UP: // up arrow
-                    if (modifiers != 2) switchNote(transposeNote(blockState.get(NOTE), 1));
-                    else switchNote(octaveChange(blockState.get(NOTE), true)); break;
+                    if (modifiers != 2) switchNote(transposeNote(blockState.getValue(NOTE), 1));
+                    else switchNote(octaveChange(blockState.getValue(NOTE), true)); break;
                 // closeScreen by pressing enter keys
-                case GLFW.GLFW_KEY_ENTER: case GLFW.GLFW_KEY_KP_ENTER: closeScreen(); break;
+                case GLFW.GLFW_KEY_ENTER: case GLFW.GLFW_KEY_KP_ENTER: NoteBlockInterface.closeGUI(); break;
             }
         }
         // sequence flag handler
@@ -325,7 +325,7 @@ public class NoteBlockInterface extends Screen {
         }
         // render the overlay
         for (int i = 0, a, b; i < instru_pos.length; i++) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(instru_pos[i][0]+TEXTURESIZE*scale*0.5, instru_pos[i][1]+TEXTURESIZE*scale*0.65, 0);
                 matrixStack.scale(9*scale, 9*scale, 9*scale);
@@ -333,19 +333,19 @@ public class NoteBlockInterface extends Screen {
                 drawCenteredString(matrixStack, font, (i == currentNbo.ordinal()? TextFormatting.GREEN + (a + "-" + b):
                         (sequenceFlag == a? TextFormatting.GREEN : TextFormatting.WHITE) + (a + "-") + TextFormatting.WHITE + b), 0, 0, 0);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
         if (currentNbo != null && minecraft != null) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(instru_pos[currentNbo.ordinal()][0], instru_pos[currentNbo.ordinal()][1], 0);
                 matrixStack.scale(scale, scale, scale);
                 fill(matrixStack, 0, 0, TEXTURESIZE, TEXTURESIZE, 0x8071ea00);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
             if (!player.isCreative()) {
-                minecraft.getTextureManager().bindTexture(BUTTON_LOC);
-                matrixStack.push();
+                minecraft.getTextureManager().bind(BUTTON_LOC);
+                matrixStack.pushPose();
                 {
                     TRANSLUCENT_TRANSPARENCY.setupRenderState();
                     RenderSystem.color4f(1f, 1f, 1f, 0.3f);
@@ -354,7 +354,7 @@ public class NoteBlockInterface extends Screen {
                     this.blit(matrixStack, 0, 0, 0, 146, 20, 20);
                     TRANSLUCENT_TRANSPARENCY.clearRenderState();
                 }
-                matrixStack.pop();
+                matrixStack.popPose();
             }
         }
         // render the whitekeys
@@ -363,73 +363,86 @@ public class NoteBlockInterface extends Screen {
         }
         // render the overlay
         if (keyType == KeyType.WHITE) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(key_pos[currentNote][0], key_pos[currentNote][1], 0);
                 matrixStack.scale(scale, scale, scale);
                 fill(matrixStack, 0, 0, WHITEKEY_W, WHITEKEY_H, 0x8071ea00);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
         // Key Labels
         for (int i = 0; i < WHITEKEYS.length; i++) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(key_pos[WHITEKEYS[i]][0] + WHITEKEY_W * scale * 0.5, key_pos[WHITEKEYS[i]][1] + WHITEKEY_H * scale * 0.8, 0);
                 matrixStack.scale(7 * scale, 7 * scale, 7 * scale);
                 drawCenteredString(matrixStack, font, NoteBlockConfig.getColoredKeys()? render_color[i]: render_white[i], 0, 0, 0);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
         // Range Indicator
-        matrixStack.push();
+        matrixStack.pushPose();
         {
             matrixStack.translate(key_pos[1][0], key_pos[1][1] + (WHITEKEY_H + 3 * SMALLGAPSIZE) * scale, 0);
             matrixStack.scale(scale, scale, scale);
             fill(matrixStack, 0, 0, WHITEKEY_W * 7 + SMALLGAPSIZE * 6, 16,
                     (NoteBlockConfig.getTargetRange() == 0)? 0xFF71ea00: 0xFFFFFFFF);
         }
-        matrixStack.pop();
-        matrixStack.push();
+        matrixStack.popPose();
+        matrixStack.pushPose();
         {
             matrixStack.translate(key_pos[13][0], key_pos[13][1] + (WHITEKEY_H + 3 * SMALLGAPSIZE) * scale, 0);
             matrixStack.scale(scale, scale, scale);
             fill(matrixStack, 0, 0, WHITEKEY_W * 7 + SMALLGAPSIZE * 6, 16,
                     (NoteBlockConfig.getTargetRange() == 1)? 0xFF71ea00: 0xFFFFFFFF);
         }
-        matrixStack.pop();
+        matrixStack.popPose();
         // render the blackkeys
         for (Button bt : buttonRenderOrder.get(1)) {
             bt.render(matrixStack, mouseX, mouseY, partialTicks);
         }
         // render the overlay
         if (keyType == KeyType.BLACK) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(key_pos[currentNote][0], key_pos[currentNote][1], 0);
                 matrixStack.scale(scale, scale, scale);
                 fill(matrixStack, 0, 0, BLACKKEY_W, BLACKKEY_H, 0x8071ea00);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
         // render all other buttons
         for (Button bt : buttonRenderOrder.get(3)) {
             bt.render(matrixStack, mouseX, mouseY, partialTicks);
         }
-        matrixStack.push();
+        matrixStack.pushPose();
         {
             matrixStack.translate(this.width/2f, instru_pos[0][1] - LARGEGAPSIZE*scale, 0);
             matrixStack.scale(11*scale, 11*scale, 11*scale);
             drawCenteredString(matrixStack, font, TextFormatting.GRAY + "Note Block Interface", 0, 0, 0);
         }
-        matrixStack.pop();
-        matrixStack.push();
+        matrixStack.popPose();
+        matrixStack.pushPose();
         {
             matrixStack.translate(this.width/2f, height/2f + (WHITEKEY_H + LARGEGAPSIZE - SMALLGAPSIZE)*scale, 0);
             matrixStack.scale(5*scale, 5*scale, 5*scale);
             drawCenteredString(matrixStack, font, TextFormatting.GRAY + "Use /noteblock for configuration and usage guide.", 0, 0, 0);
         }
-        matrixStack.pop();
+        matrixStack.popPose();
+    }
+
+    // Custom Member Functions
+    public void attachNonClientWorld(World worldIn) {
+        this.nonClientWorld = worldIn;
+    }
+    public static NoteBlockInterface openGUI(BlockPos pos, PlayerEntity player) {
+        NoteBlockInterface self = new NoteBlockInterface(pos, player);
+        Minecraft.getInstance().setScreen(self);
+        return self;
+    }
+    public static void closeGUI() {
+        Minecraft.getInstance().setScreen(null);
     }
 
     private enum KeyType {

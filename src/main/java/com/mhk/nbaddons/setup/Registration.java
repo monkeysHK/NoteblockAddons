@@ -20,15 +20,15 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class Registration {
     public static final DeferredRegister<Block> VANILLA_BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "minecraft");
     public static RegistryObject<Block> NOTEBLOCK = VANILLA_BLOCKS.register(
-            "note_block", () -> new NBTNoteBlock(AbstractBlock.Properties.from(Blocks.NOTE_BLOCK)));
+            "note_block", () -> new NBTNoteBlock(AbstractBlock.Properties.copy(Blocks.NOTE_BLOCK)));
 
     public static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, nbaddons.MOD_ID);
     public static RegistryObject<TileEntityType<NoteBlockTileEntity>> NOTEBLOCK_TE = TILE_ENTITIES.register(
-            "note_block", () -> TileEntityType.Builder.create(NoteBlockTileEntity::new, NOTEBLOCK.get()).build(null));
+            "note_block", () -> TileEntityType.Builder.of(NoteBlockTileEntity::new, NOTEBLOCK.get()).build(null));
 
     public static final DeferredRegister<Item> VANILLA_ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "minecraft");
     public static final RegistryObject<BlockItem> NOTEBLOCK_BI = VANILLA_ITEMS.register("note_block", () ->
-            new BlockItem(NOTEBLOCK.get(), new Item.Properties().group(ItemGroup.REDSTONE)));
+            new BlockItem(NOTEBLOCK.get(), new Item.Properties().tab(ItemGroup.TAB_REDSTONE)));
 
     public static void register() {
         VANILLA_BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());

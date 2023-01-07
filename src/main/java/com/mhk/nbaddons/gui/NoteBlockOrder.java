@@ -44,8 +44,8 @@ public enum NoteBlockOrder {
 
 
     NoteBlockOrder(NoteBlockInstrument instrument, InstrumentGroup group, Block block) {
-        this.name = instrument.getString();
-        this.sound = instrument.getSound();
+        this.name = instrument.getSerializedName();
+        this.sound = instrument.getSoundEvent();
         this.group = group;
         this.blockUnder = block;
         this.instru = instrument;

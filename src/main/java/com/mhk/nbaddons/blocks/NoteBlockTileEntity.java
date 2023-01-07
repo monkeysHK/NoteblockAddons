@@ -8,7 +8,7 @@ import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import static net.minecraft.block.NoteBlock.INSTRUMENT;
 import static net.minecraft.block.NoteBlock.NOTE;
@@ -24,30 +24,32 @@ public class NoteBlockTileEntity extends TileEntity {
         super(NOTEBLOCK_TE.get());
     }
 
-    public void readFromBlock(BlockState state) {
-        this.note = state.get(NOTE);
-        this.instrument = state.get(INSTRUMENT).ordinal();
+    public void loadFromBlockState(BlockState state) {
+        this.note = state.getValue(NOTE);
+        this.instrument = state.getValue(INSTRUMENT).ordinal();
     }
 
     @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
+    @NotNull
+    public CompoundNBT save(@NotNull CompoundNBT compound) {
+        super.save(compound);
         compound.putInt("note", note);
         compound.putInt("instrument", instrument);
         return compound;
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT nbt) {
-        super.read(state, nbt);
+    public void load(@NotNull BlockState state, @NotNull CompoundNBT nbt) {
+        super.load(state, nbt);
         this.note = nbt.getInt("note");
         this.instrument = nbt.getInt("instrument");
     }
 
     @Override
+    @NotNull
     public CompoundNBT getUpdateTag() {
-        readFromBlock(getBlockState());
-        return write(new CompoundNBT());
+        loadFromBlockState(getBlockState());
+        return save(new CompoundNBT());
     }
 
     @Override
@@ -55,17 +57,16 @@ public class NoteBlockTileEntity extends TileEntity {
         super.handleUpdateTag(state, tag);
     }
 
-    @Nullable
     @Override
     public SUpdateTileEntityPacket getUpdatePacket() {
-        return new SUpdateTileEntityPacket(this.pos, -1, getUpdateTag());
+        return new SUpdateTileEntityPacket(this.getBlockPos(), -1, getUpdateTag());
     }
 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        CompoundNBT tag = pkt.getNbtCompound();
+        CompoundNBT tag = pkt.getTag();
         // Handle data
-        this.read(this.getBlockState(), pkt.getNbtCompound());
+        this.load(this.getBlockState(), pkt.getTag());
     }
 
     public int getNote() {

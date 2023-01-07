@@ -20,7 +20,7 @@ import static com.mhk.nbaddons.gui.SwitchButton.SWITCH_W;
 public class ConfigInterface extends Screen {
 
     // General
-    private List<Button> buttonRenderOrder = new ArrayList<>();
+    private final List<Button> buttonRenderOrder = new ArrayList<>();
     // Measurements
     private final int TEXTURESIZE = 255;
     private final int WHITEKEY_W = 128, WHITEKEY_H = 512;
@@ -45,7 +45,7 @@ public class ConfigInterface extends Screen {
     public void init() {
         assert minecraft != null;
         // Scale is calculated the same way as NoteBlockInterface::scale
-        scale = (float) this.width / (TEXTURESIZE * 8 + LARGEPADDING * (2 + SEP_X * 2) + PADDING * 5);
+        scale = (float) width / (TEXTURESIZE * 8 + LARGEPADDING * (2 + SEP_X * 2) + PADDING * 5);
 
         // initialize list for each render stage
         // render order is in different order of addButton order:
@@ -55,13 +55,13 @@ public class ConfigInterface extends Screen {
         right_column_content.clear();
 
         {
-            right_column_x = this.width * (3/4f) + PADDING * scale;
-            column_width = this.width * (1/4f) - PADDING * scale * 2f;
+            right_column_x = width * (3/4f) + PADDING * scale;
+            column_width = width * (1/4f) - PADDING * scale * 2f;
             right_column_mid = right_column_x + column_width/2f;
         }
         // Add done button to button list
         {
-            buttonRenderOrder.add(addButton(new Button(width/2 - 100, Math.round(height/2f + 5.5f * LARGEPADDING * scale), 200, 20, new StringTextComponent("Done"), button -> closeScreen())));
+            buttonRenderOrder.add(addButton(new Button(width/2 - 100, Math.round(height/2f + 5.5f * LARGEPADDING * scale), 200, 20, new StringTextComponent("Done"), button -> ConfigInterface.closeGUI())));
         }
         // setup columns and add buttons
         {
@@ -114,26 +114,30 @@ public class ConfigInterface extends Screen {
             text.render(matrixStack);
         }
 
-        matrixStack.push();
+        matrixStack.pushPose();
         {
             matrixStack.translate(this.width/2f, LARGEPADDING * scale, 0);
             matrixStack.scale(11*scale, 11*scale, 11*scale);
             drawCenteredString(matrixStack, font, TextFormatting.GRAY + "Note Block Configurations/Guide", 0, 0, 0);
         }
-        matrixStack.pop();
-        matrixStack.push();
+        matrixStack.popPose();
+        matrixStack.pushPose();
         {
             if (minecraft != null) {
-                minecraft.getTextureManager().bindTexture(GUIDE_LOC);
+                minecraft.getTextureManager().bind(GUIDE_LOC);
                 matrixStack.translate(LARGEPADDING * scale, 2 * LARGEPADDING * scale, 0);
                 matrixStack.scale(10*scale, 10*(1001/1920f)*scale, 10*scale);
                 this.blit(matrixStack, 0, 0, 0, 0, 255, 255);
             }
         }
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
-    public static void open() {
-        Minecraft.getInstance().displayGuiScreen(new ConfigInterface());
+    // Custom Member Functions
+    public static void openGUI() {
+        Minecraft.getInstance().setScreen(new ConfigInterface());
+    }
+    public static void closeGUI() {
+        Minecraft.getInstance().setScreen(null);
     }
 }

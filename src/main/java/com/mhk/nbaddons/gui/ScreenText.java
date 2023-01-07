@@ -43,7 +43,7 @@ public class ScreenText {
         String line = "";
         for (String word : wordList) {
             if (word.equals("")) continue;
-            if (fontRenderer.getStringWidth(line+(line.equals("")? "": " ")+word) * wordScale > x_limit) {
+            if (fontRenderer.width(line+(line.equals("")? "": " ")+word) * wordScale > x_limit) {
                 stringHolder.add(textFormatHeader + line);
                 line = word;
             }
@@ -62,7 +62,7 @@ public class ScreenText {
         else starting_y = y;
 
         for (int i = 0; i < stringHolder.size(); i++) {
-            matrixStack.push();
+            matrixStack.pushPose();
             {
                 matrixStack.translate(x, starting_y + RATIO * wordScale * i, 0);
                 matrixStack.scale(wordScale, wordScale, wordScale);
@@ -71,7 +71,7 @@ public class ScreenText {
                 else
                     drawString(matrixStack, fontRenderer, stringHolder.get(i), text, 0, 0);
             }
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 
